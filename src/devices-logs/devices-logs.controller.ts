@@ -15,6 +15,7 @@ export class DevicesLogsController {
   async logs(@Param('id') id: number) {
     const deviceLogs = await this.devicesLogsService.find({
       where: { deviceId: id },
+      order: { id: 'DESC' },
     });
 
     return { deviceId: id, deviceLogs };

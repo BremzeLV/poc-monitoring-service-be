@@ -11,7 +11,7 @@ export class HomeController {
   @Get()
   @Render('index.hbs')
   root() {
-    const devices = this.devicesService.find({});
+    const devices = this.devicesService.find({ order: { id: 'DESC' } });
     return { devices };
   }
 }
