@@ -28,7 +28,7 @@ export class DeviceSeedService {
           protocol: DeviceProtocol.Https,
         },
         {
-          ip: 'device-mock-2:50051',
+          ip: 'device-mock-2:50052',
           protocol: DeviceProtocol.GRPC,
         },
         {
