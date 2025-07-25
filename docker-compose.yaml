@@ -44,9 +44,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - APP_PORT=3001
+      - GRPC_APP_PORT=50051
     command: ["npm", "run", "start:device-mock"]
     ports:
       - "3001:3001"
+      - "50051:50051"
 
   device-mock-2:
     build:
@@ -54,9 +56,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - APP_PORT=3002
+      - GRPC_APP_PORT=50052
     command: ["npm", "run", "start:device-mock"]
     ports:
       - "3002:3002"
+      - "50052:50052"
 
   device-mock-3:
     build:
@@ -64,9 +68,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - APP_PORT=3003
+      - GRPC_APP_PORT=50053
     command: ["npm", "run", "start:device-mock"]
     ports:
       - "3003:3003"
+      - "50053:50053"
 
 volumes:
   boilerplate-db:

@@ -15,7 +15,7 @@ async function bootstrap() {
     options: {
       package: 'device',
       protoPath: join(__dirname, 'grpc/proto/device.proto'),
-      url: '0.0.0.0:50051',
+      url: `0.0.0.0:${process.env.GRPC_APP_PORT ?? 50051}`,
     },
   });
 

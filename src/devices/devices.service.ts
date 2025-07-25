@@ -18,7 +18,7 @@ export class DevicesService {
 
   async create(createDeviceDto: CreateDeviceDto): Promise<Device> {
     const existingDevice = await this.devicesRepository.find({
-      where: { ip: createDeviceDto.ip },
+      where: { ip: createDeviceDto.ip, protocol: createDeviceDto.protocol },
     });
 
     if (existingDevice.length) {
