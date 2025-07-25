@@ -1,0 +1,68 @@
+<div id="device-list-container" class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold">Device List</h2>
+        <a href="/devices/add" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add Device</a>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-200 bg-white shadow rounded-lg overflow-hidden">
+        <thead class="bg-gray-100">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700">ID</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700">IP Address</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700">Status</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700">Last Ping</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700">Protocol</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700">Created</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700">Updated</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {{#each devices}}
+            <tr data-device-id="{{this.id}}" class="hover:bg-gray-50 cursor-pointer"
+                onclick="window.location='/devices-logs/{{this.id}}'">
+                <td class="px-6 py-1 text-xs text-gray-900">{{this.id}}</td>
+                <td class="px-6 py-1 text-xs text-gray-900">{{this.ip}}</td>
+                <td class="px-6 py-1">
+                    <span class="device-status inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                {{#if (ifEquals this.status 'online')}} bg-green-100 text-green-800
+                {{else if (ifEquals this.status 'offline')}} bg-red-100 text-red-800
+                {{else}} bg-gray-100 text-gray-800
+                {{/if}}">
+                        {{this.status}}
+                    </span>
+                </td>
+                <td class="device-last-ping px-6 py-1 text-xs text-gray-600">{{formatDate this.lastPing}}</td>
+                <td class="device-protocol px-6 py-1 text-xs text-gray-600">{{this.protocol}}</td>
+                <td class="px-6 py-1 text-xs text-gray-600">{{formatDate this.createdAt}}</td>
+                <td class="device-updated-at px-6 py-1 text-xs text-gray-600">{{formatDate this.updatedAt}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+
+    </table>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    socket.on('deviceUpdated', (updatedDevice) => {
+        const container = document.getElementById('device-list-container');
+        if (!container) return;
+
+        const row = container.querySelector(`tr[data-device-id="${updatedDevice.id}"]`);
+        if (row) {
+            row.querySelector('.device-status').textContent = updatedDevice.status;
+            row.querySelector('.device-status').className = getStatusClasses(updatedDevice.status);
+            row.querySelector('.device-last-ping').textContent = formatDate(updatedDevice.lastPing);
+            row.querySelector('.device-protocol').textContent = updatedDevice.protocol;
+            row.querySelector('.device-updated-at').textContent = formatDate(updatedDevice.updatedAt);
+        }
+    });
+
+    function getStatusClasses(status) {
+        if (status === 'online') return 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 device-status';
+        if (status === 'offline') return 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 device-status';
+        return 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 device-status';
+    }
+</script>

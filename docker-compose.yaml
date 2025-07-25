@@ -10,25 +10,24 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
 
-  maildev:
-    build:
-      context: .
-      dockerfile: maildev.Dockerfile
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
     ports:
-      - ${MAIL_CLIENT_PORT}:1080
-      - ${MAIL_PORT}:1025
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-
-  # Uncomment to use redis
-  # redis:
-  #   image: redis:7-alpine
-  #   ports:
-  #     - 6379:6379
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_BROKER_ID=1
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${KAFKA_CFG_CONTROLLER_QUORUM_VOTERS}
+      - KAFKA_CFG_LISTENERS=${KAFKA_CFG_LISTENERS}
+      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS}
+      - KAFKA_KRAFT_CLUSTER_ID=${KAFKA_KRAFT_CLUSTER_ID}
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
 
   api:
     build:
@@ -36,6 +35,38 @@ services:
       dockerfile: Dockerfile
     ports:
       - ${APP_PORT}:${APP_PORT}
+    depends_on:
+      - kafka
+
+  device-mock-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APP_PORT=3001
+    command: ["npm", "run", "start:device-mock"]
+    ports:
+      - "3001:3001"
+
+  device-mock-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APP_PORT=3002
+    command: ["npm", "run", "start:device-mock"]
+    ports:
+      - "3002:3002"
+
+  device-mock-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APP_PORT=3003
+    command: ["npm", "run", "start:device-mock"]
+    ports:
+      - "3003:3003"
 
 volumes:
   boilerplate-db:
