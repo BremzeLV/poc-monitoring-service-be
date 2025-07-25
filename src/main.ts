@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import {
   ClassSerializerInterceptor,
+  RequestMethod,
   ValidationPipe,
-  VersioningType,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
@@ -12,9 +12,19 @@ import { AppModule } from './app.module';
 import validationOptions from './utils/validation-options';
 import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
+import { Transport } from '@nestjs/microservices';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { engine } from 'express-handlebars';
+import { handlebarsHelpers } from './utils/handlebars-helpers';
+import ensureTopics from './kafka/utils/ensure-topics';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  await ensureTopics();
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: true,
+  });
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
 
@@ -22,18 +32,35 @@ async function bootstrap() {
   app.setGlobalPrefix(
     configService.getOrThrow('app.apiPrefix', { infer: true }),
     {
-      exclude: ['/'],
+      exclude: [
+        { path: '/', method: RequestMethod.GET },
+        { path: '/devices-logs/:id', method: RequestMethod.GET },
+        { path: '/devices/add', method: RequestMethod.GET },
+      ],
     },
   );
-  app.enableVersioning({
-    type: VersioningType.URI,
-  });
   app.useGlobalPipes(new ValidationPipe(validationOptions));
   app.useGlobalInterceptors(
-    // ResolvePromisesInterceptor is used to resolve promises in responses because class-transformer can't do it
-    // https://github.com/typestack/class-transformer/issues/549
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
+  );
+
+  app.connectMicroservice(
+    {
+      transport: Transport.KAFKA,
+      options: {
+        client: {
+          clientId: configService.getOrThrow('kafka.clientId', { infer: true }),
+          brokers: configService.getOrThrow('kafka.brokers', { infer: true }),
+        },
+        consumer: {
+          groupId: configService.getOrThrow('kafka.consumerGroupId', {
+            infer: true,
+          }),
+        },
+      },
+    },
+    { inheritAppConfig: true },
   );
 
   const options = new DocumentBuilder()
@@ -51,9 +78,24 @@ async function bootstrap() {
     })
     .build();
 
+  app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.setBaseViewsDir(join(__dirname, '..', 'views'));
+  app.engine(
+    'hbs',
+    engine({
+      extname: 'hbs',
+      defaultLayout: 'main',
+      layoutsDir: join(__dirname, '..', 'views', 'layouts'),
+      partialsDir: join(__dirname, '..', 'views', 'partials'),
+      helpers: handlebarsHelpers,
+    }),
+  );
+  app.setViewEngine('hbs');
+
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('docs', app, document);
 
+  await app.startAllMicroservices();
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
 void bootstrap();

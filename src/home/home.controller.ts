@@ -1,15 +1,17 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Render } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { HomeService } from './home.service';
+import { DevicesService } from '../devices/devices.service';
 
 @ApiTags('Home')
 @Controller()
 export class HomeController {
-  constructor(private service: HomeService) {}
+  constructor(private devicesService: DevicesService) {}
 
   @Get()
-  appInfo() {
-    return this.service.appInfo();
+  @Render('index.hbs')
+  root() {
+    const devices = this.devicesService.find({});
+    return { devices };
   }
 }
