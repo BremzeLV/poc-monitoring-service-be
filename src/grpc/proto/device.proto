@@ -9,12 +9,11 @@ service DeviceService {
 message HealthRequest {}
 
 message HealthResponse {
-  string mac = 1;
-  double cpuLoad = 2;
-  double memoryUsage = 3;
-  string swVersion = 4;
-  string fwVersion = 5;
-  string hwVersion = 6;
-  int32 id = 7;
-  string name = 8;
+  int32 number = 1;
+  string mac = 2;
+  double cpuLoad = 3;
+  double memoryUsage = 4;
+  string swVersion = 5;
+  string fwVersion = 6;
+  string hwVersion = 7;
 }
