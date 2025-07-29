@@ -12,7 +12,9 @@ message HealthResponse {
   string mac = 1;
   double cpuLoad = 2;
   double memoryUsage = 3;
-  string softwareVersion = 4;
-  int32 id = 5;
-  string name = 6;
+  string swVersion = 4;
+  string fwVersion = 5;
+  string hwVersion = 6;
+  int32 id = 7;
+  string name = 8;
 }

@@ -11,7 +11,9 @@ export type GRPCHealthData = {
   mac: string;
   cpuLoad: number;
   memoryUsage: number;
-  softwareVersion: string;
+  swVersion: string;
+  fwVersion: string;
+  hwVersion: string;
 };
 
 export interface GRPCDeviceService extends Client {
